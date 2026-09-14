@@ -24,7 +24,7 @@ st.markdown("""
         color: #4A3B32;
     }
     .metric-card {
-        background: linear-gradient(135deg, #FFFBEB 0% #FEF3C7 100%);
+        background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
         padding: 22px;
         border-radius: 16px;
         border: 1px solid #FDE68A;
@@ -80,16 +80,25 @@ with right_col:
 
     st.markdown("---")
 
-    # 상세 설정 (토글)
-    with st.expander("⚙️ 상세 설정 (수익률, 수령기간, 물가상승률)"):
+    # 상세 설정 (깨짐 현상이 없는 깔끔한 체크박스 기반 토글 방식으로 변경)
+    show_details = st.checkbox("⚙️ 상세 설정 열기 (수익률, 수령기간, 물가상승률 조절)")
+    
+    # 기본값 설정
+    annual_return = 7.0
+    pension_term = 20
+    inflation_mode = True
+    inflation_rate = 2.0
+
+    if show_details:
+        st.markdown("<div style='background-color: #FFFBEB; padding: 15px; border-radius: 10px; border: 1px solid #FDE68A;'>", unsafe_allow_html=True)
         annual_return = st.slider("연복리 수익률 (%)", min_value=1.0, max_value=12.0, value=7.0, step=0.5, format="%.1f%%")
         pension_term = st.slider("연금 수령 기간 (년)", min_value=10, max_value=30, value=20, step=1, format="%d년")
         
         st.markdown("---")
         inflation_mode = st.checkbox("📉 물가상승률 반영 (실질 가치)", value=True)
-        inflation_rate = 2.0
         if inflation_mode:
             inflation_rate = st.slider("연간 물가상승률 (%)", min_value=1.0, max_value=5.0, value=2.0, step=0.5, format="%.1f%%")
+        st.markdown("</div>", unsafe_allow_html=True)
             
     st.markdown("<br>", unsafe_allow_html=True)
     calculate_btn = st.button("연금 계산하기 🍊", use_container_width=True)
@@ -146,7 +155,7 @@ with left_col:
 
     with col3:
         st.markdown(f"""
-        <div class="metric-card" style="background: linear-gradient(135deg, #FEF3C7 0% #FDE68A 100%); border: 1px solid #F59E0B;">
+        <div class="metric-card" style="background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); border: 1px solid #F59E0B;">
             <p style="color: #78350F; font-size: 13px; margin-bottom: 5px; font-weight: bold;">총 현금흐름 (월)</p>
             <h3 style="color: #B45309; margin: 0; font-size: 20px;">{int(total_monthly_pension):,}만원</h3>
         </div>
