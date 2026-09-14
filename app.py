@@ -4,12 +4,12 @@ import numpy as np
 
 # 페이지 기본 설정
 st.set_page_config(
-    page_title="노후 연금 시뮬레이터",
+    page_title="귤노션 | 노후 연금 시뮬레이터",
     page_icon="🍊",
     layout="wide"
 )
 
-# 따뜻하고 코지한 귤노션 감성 CSS 적용 (주황/노란 포인트)
+# 따뜻하고 코지한 귤노션 감성 CSS 적용
 st.markdown("""
 <style>
     @import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-10-21@1.0/MaruBuri-Regular.woff');
@@ -43,16 +43,26 @@ st.markdown("""
         background-color: #D97706;
         color: white;
     }
-    /* 익스팬더(아코디언 토글) 배경 및 테두리 정돈 */
-    .streamlit-expanderHeader {
+    /* 상세설정 토글 버튼 스타일링 */
+    .toggle-btn > button {
         background-color: #FFFBEB !important;
-        border-radius: 8px !important;
-        border: 1px solid #FDE68A !important;
         color: #92400E !important;
+        border: 1px solid #FDE68A !important;
+        border-radius: 8px !important;
         font-weight: bold !important;
+        text-align: left !important;
+        width: 100% !important;
+    }
+    .toggle-btn > button:hover {
+        background-color: #FEF3C7 !important;
+        color: #78350F !important;
     }
 </style>
 """, unsafe_allow_html=True)
+
+# 세션 상태를 이용해 상세 설정 열닫힘 관리
+if 'show_detail' not in st.session_state:
+    st.session_state.show_detail = False
 
 # 타이틀 섹션
 st.markdown("""
@@ -88,16 +98,27 @@ with right_col:
 
     st.markdown("---")
 
-    # 삼각형 토글 형태의 상세 설정 익스팬더 (내부 노란색 배경 박스 포함)
+    # [수정됨] 엉킴 현상 없는 커스텀 삼각형 토글 버튼 구현
+    toggle_icon = "▼" if st.session_state.show_detail else "▶"
+    if st.button(f"{toggle_icon} 상세 설정 (수익률 및 수령기간 조절)", use_container_width=True):
+        st.session_state.show_detail = not st.session_state.show_detail
+        st.rerun()
+
+    # 기본값 설정
     annual_return = 7.0
     pension_term = 20
-    
-    with st.expander("⚙️ 상세 설정 (수익률 및 수령기간 조절)", expanded=False):
-        st.markdown("<div style='background-color: #FFFBEB; padding: 10px; border-radius: 8px;'>", unsafe_allow_html=True)
+
+    # [수정됨] 토글이 열렸을 때만 노란색 배경 박스 안에 슬라이더 배치
+    if st.session_state.show_detail:
+        st.markdown("""
+        <div style='background-color: #FFFBEB; padding: 18px; border-radius: 12px; border: 1px solid #FDE68A; margin-top: 10px; margin-bottom: 10px;'>
+        """, unsafe_allow_html=True)
+        
         annual_return = st.slider("연복리 수익률 (%)", min_value=1.0, max_value=12.0, value=7.0, step=0.5, format="%.1f%%")
         pension_term = st.slider("연금 수령 기간 (년)", min_value=10, max_value=30, value=20, step=1, format="%d년")
-        st.markdown("</div>", unsafe_allow_html=True)
         
+        st.markdown("</div>", unsafe_allow_html=True)
+
     st.markdown("<br>", unsafe_allow_html=True)
     
     # 물가상승률 설정
