@@ -4,12 +4,12 @@ import numpy as np
 
 # 페이지 기본 설정
 st.set_page_config(
-    page_title="귤노션 | 노후 연금 시뮬레이터",
+    page_title="노후 연금 시뮬레이터",
     page_icon="🍊",
     layout="wide"
 )
 
-# 따뜻하고 코지한 감성의 CSS 및 마루부리 폰트 적용
+# 따뜻하고 코지한 감성의 CSS 및 폰트 적용 (아이콘 깨짐 현상 해결)
 st.markdown("""
 <style>
     @import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-10-21@1.0/MaruBuri-Regular.woff');
@@ -31,12 +31,6 @@ st.markdown("""
         box-shadow: 0 4px 6px rgba(0,0,0,0.02);
         text-align: center;
     }
-    .setting-box {
-        background-color: #F4EFEB;
-        padding: 25px;
-        border-radius: 16px;
-        border: 1px solid #E6DFD5;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -51,18 +45,30 @@ st.markdown("---")
 left_col, right_col = st.columns([1.3, 1])
 
 with right_col:
-    st.markdown('<div class="setting-box">', unsafe_allow_html=True)
     st.subheader("🛠️ 시뮬레이션 설정")
     
     # 1. 메인 필수 입력 항목
     current_age = st.number_input("현재 나이 (만 나이)", min_value=20, max_value=60, value=30, step=1)
     target_retire_age = st.number_input("은퇴 나이 (은퇴 예정 나이)", min_value=50, max_value=70, value=60, step=1)
-    current_asset = st.number_input("초기 자금 (원) [이미 보유한 자산]", min_value=0, max_value=200000000, value=10000000, step=1000000, format="%d")
-    monthly_saving = st.number_input("월 납입액 (원) [매월 정기 납입할 금액]", min_value=0, max_value=5000000, value=1000000, step=100000, format="%d")
+    
+    # 1000단위 콤마 입력을 위한 텍스트 처리 방식 적용
+    current_asset_str = st.text_input("초기 자금 (원) [이미 보유한 자산]", value="10,000,000")
+    monthly_saving_str = st.text_input("월 납입액 (원) [매월 정기 납입할 금액]", value="1,000,000")
+    
+    # 문자열 콤마 제거 후 숫자로 변환 (숫자 이외의 문자가 있으면 기본값 처리)
+    try:
+        current_asset = int(current_asset_str.replace(",", "").strip())
+    except:
+        current_asset = 0
+        
+    try:
+        monthly_saving = int(monthly_saving_str.replace(",", "").strip())
+    except:
+        monthly_saving = 0
 
     st.markdown("---")
 
-    # 2. 상세 설정 (토글로 숨기기)
+    # 2. 상세 설정 (토글로 숨기기 - 깨짐 현상 해결된 기본 expander 사용)
     with st.expander("⚙️ 상세 설정 (수익률, 수령기간, 물가상승률)"):
         annual_return = st.slider("연복리 수익률 (%)", min_value=1.0, max_value=12.0, value=7.0, step=0.5, format="%.1f%%")
         pension_term = st.slider("연금 수령 기간 (년)", min_value=10, max_value=30, value=20, step=1, format="%d년")
@@ -72,7 +78,11 @@ with right_col:
         inflation_rate = 2.0
         if inflation_mode:
             inflation_rate = st.slider("연간 물가상승률 (%)", min_value=1.0, max_value=5.0, value=2.0, step=0.5, format="%.1f%%")
-    st.markdown('</div>', unsafe_allow_html=True)
+            
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # 연금 계산하기 버튼 생성
+    calculate_btn = st.button("연금 계산하기 🍊", use_container_width=True)
 
 with left_col:
     # 계산 로직
@@ -134,7 +144,7 @@ with left_col:
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # 자산 추이 시각화 그래프 데이터 생성
+    # 자산 추이 시각화 그래프 데이터 생성 (X축에 '세' 단위 붙이기)
     ages = list(range(int(current_age), int(target_retire_age) + pension_term + 1))
     asset_trajectory = []
 
@@ -154,7 +164,7 @@ with left_col:
             val = max(0, withdrawn)
             asset_trajectory.append(val / 10000)
 
-    chart_df = pd.DataFrame({"자산 (만원)": asset_trajectory}, index=ages)
+    chart_df = pd.DataFrame({"자산 (만원)": asset_trajectory}, index=[f"{a}세" for a in ages])
 
     st.subheader("📈 은퇴 전후 자산 추이 시뮬레이션")
     st.line_chart(chart_df, color="#F97316")
