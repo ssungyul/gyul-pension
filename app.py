@@ -4,7 +4,7 @@ import numpy as np
 
 # 페이지 기본 설정
 st.set_page_config(
-    page_title="귤노션 | 노후 연금 시뮬레이터",
+    page_title="노후 연금 시뮬레이터",
     page_icon="🍊",
     layout="wide"
 )
@@ -43,6 +43,14 @@ st.markdown("""
         background-color: #D97706;
         color: white;
     }
+    /* 익스팬더(아코디언 토글) 배경 및 테두리 정돈 */
+    .streamlit-expanderHeader {
+        background-color: #FFFBEB !important;
+        border-radius: 8px !important;
+        border: 1px solid #FDE68A !important;
+        color: #92400E !important;
+        font-weight: bold !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -80,26 +88,24 @@ with right_col:
 
     st.markdown("---")
 
-    # 상세 설정 (깨짐 현상이 없는 깔끔한 체크박스 기반 토글 방식으로 변경)
-    show_details = st.checkbox("⚙️ 상세 설정 열기 (수익률, 수령기간, 물가상승률 조절)")
-    
-    # 기본값 설정
+    # 삼각형 토글 형태의 상세 설정 익스팬더 (내부 노란색 배경 박스 포함)
     annual_return = 7.0
     pension_term = 20
-    inflation_mode = True
-    inflation_rate = 2.0
-
-    if show_details:
-        st.markdown("<div style='background-color: #FFFBEB; padding: 15px; border-radius: 10px; border: 1px solid #FDE68A;'>", unsafe_allow_html=True)
+    
+    with st.expander("⚙️ 상세 설정 (수익률 및 수령기간 조절)", expanded=False):
+        st.markdown("<div style='background-color: #FFFBEB; padding: 10px; border-radius: 8px;'>", unsafe_allow_html=True)
         annual_return = st.slider("연복리 수익률 (%)", min_value=1.0, max_value=12.0, value=7.0, step=0.5, format="%.1f%%")
         pension_term = st.slider("연금 수령 기간 (년)", min_value=10, max_value=30, value=20, step=1, format="%d년")
-        
-        st.markdown("---")
-        inflation_mode = st.checkbox("📉 물가상승률 반영 (실질 가치)", value=True)
-        if inflation_mode:
-            inflation_rate = st.slider("연간 물가상승률 (%)", min_value=1.0, max_value=5.0, value=2.0, step=0.5, format="%.1f%%")
         st.markdown("</div>", unsafe_allow_html=True)
-            
+        
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # 물가상승률 설정
+    inflation_mode = st.checkbox("📉 물가상승률 반영 (실질 가치)", value=True)
+    inflation_rate = 2.0
+    if inflation_mode:
+        inflation_rate = st.slider("연간 물가상승률 (%)", min_value=1.0, max_value=5.0, value=2.0, step=0.5, format="%.1f%%")
+
     st.markdown("<br>", unsafe_allow_html=True)
     calculate_btn = st.button("연금 계산하기 🍊", use_container_width=True)
 
@@ -163,7 +169,7 @@ with left_col:
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # 자산 추이 시각화 그래프 데이터 생성
+    # 자산 추이 시각화 그래프 데이터 생성 (X축 '세' 단위 포함)
     ages = list(range(int(current_age), int(target_retire_age) + pension_term + 1))
     asset_trajectory = []
 
